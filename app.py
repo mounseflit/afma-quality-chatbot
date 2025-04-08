@@ -1,22 +1,23 @@
 import streamlit as st
-from openai import OpenAI
 import time
+from openai import OpenAI
 
-# Initialisation du client OpenAI
+# Initialisation du client avec la clé API depuis les secrets
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# ID de l'Assistant
+# ID de l'assistant AFMA
 ASSISTANT_ID = "asst_hIbemseWgHUIE32dCFmLEykX"
 
-# Historique de chat
+# Initialisation de l'historique de la conversation
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Titre et Branding
+# Interface utilisateur
+st.set_page_config(page_title="AFMA Chatbot", layout="centered")
 st.title("🤖 Assistant Procédural Qualité AFMA")
-st.caption("Développé par AI Crafters • Pour un accompagnement conforme et structuré")
+st.caption("Développé par AI Crafters")
 
-# --- SECTION : Explication des fonctionnalités ---
+# Bloc d'explication
 with st.expander("ℹ️ En savoir plus sur le fonctionnement du chatbot"):
     st.markdown("""
     ### 🔍 Que fait cet assistant ?
@@ -38,38 +39,39 @@ with st.expander("ℹ️ En savoir plus sur le fonctionnement du chatbot"):
     3. Recommandation claire avec référence du document et section exacte.
     4. Explication des rôles et étapes à suivre.
     
-    Pour toute utilisation, décrivez le plus précisément possible votre situation réelle. L’assistant vous guidera avec rigueur et bienveillance.
+    Pour toute utilisation, décrivez le plus précisément possible votre situation réelle.
     """)
 
-# Affichage de l'historique de conversation
+# Affichage des messages précédents
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Entrée utilisateur
+# Champ d'entrée utilisateur
 if prompt := st.chat_input("Comment puis-je vous assister concernant les procédures qualité d'AFMA aujourd’hui ?"):
-    # Affichage message utilisateur
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    # Création d’un thread avec l’assistant
-    thread = openai.Thread.create()
-    openai.Message.create(thread_id=thread.id, role="user", content=prompt)
+    # Création d’un thread et ajout du message utilisateur
+    thread = client.beta.threads.create()
+    client.beta.threads.messages.create(thread_id=thread.id, role="user", content=prompt)
 
-    # Lancer le run avec l’assistant
-    run = openai.Run.create(thread_id=thread.id, assistant_id=ASSISTANT_ID)
+    # Lancement de l'assistant
+    run = client.beta.threads.runs.create(thread_id=thread.id, assistant_id=ASSISTANT_ID)
 
-    # Attente de la réponse complète
-    while run.status != "completed":
-        time.sleep(5)
-        run = openai.Run.retrieve(thread_id=thread.id, run_id=run.id)
+    # Attente jusqu’à la fin du traitement
+    with st.spinner("L’assistant analyse votre situation..."):
+        while True:
+            run_status = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+            if run_status.status == "completed":
+                break
+            time.sleep(1)
 
-    # Récupération des messages de réponse
-    messages = openai.Message.list(thread_id=thread.id)
+    # Récupération de la réponse
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
     assistant_response = messages.data[0].content[0].text.value
 
-    # Affichage réponse assistant
     with st.chat_message("assistant"):
         st.markdown(assistant_response)
     st.session_state.messages.append({"role": "assistant", "content": assistant_response})
