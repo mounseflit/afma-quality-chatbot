@@ -1,10 +1,3 @@
-Voici deux fichiers essentiels pour documenter et faire fonctionner votre chatbot Streamlit : un `README.md` et un `requirements.txt`.
-
----
-
-## ✅ Fichier `README.md`
-
-```markdown
 # 🤖 Assistant Procédural Qualité AFMA
 
 Développé par **AI Crafters**, cet assistant virtuel permet aux collaborateurs d'AFMA d’obtenir des recommandations précises sur les **procédures qualité** internes à l’entreprise. Il s’appuie sur l'API d'OpenAI et les bibliothèques Streamlit pour offrir une interface conviviale et conversationnelle.
@@ -100,7 +93,7 @@ streamlit>=1.32.0
 Ce projet a été développé par **AI Crafters** pour le compte d'**AFMA** dans le cadre de l'amélioration continue de la qualité et de la conformité documentaire.
 
 ---
-```
+
 
 
 
