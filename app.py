@@ -1,9 +1,9 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import time
 
-# Clé API OpenAI
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Initialisation du client OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ID de l'Assistant
 ASSISTANT_ID = "asst_hIbemseWgHUIE32dCFmLEykX"
