@@ -30,16 +30,9 @@ if prompt := st.chat_input("Posez-moi votre question sur une procédure AFMA..."
     thread = client.beta.threads.create()
     client.beta.threads.messages.create(thread_id=thread.id, role="user", content=prompt)
 
-    # Lancement de l'assistant
-    run = client.beta.threads.runs.create(thread_id=thread.id, assistant_id=ASSISTANT_ID)
-
-    # Attente jusqu'à la fin du traitement
+    # Lancement de l'assistant avec create_and_poll
     with st.spinner("L’assistant réfléchit à la meilleure procédure..."):
-        while True:
-            run_status = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
-            if run_status.status == "completed":
-                break
-            time.sleep(1)
+        run = client.beta.threads.runs.create_and_poll(thread_id=thread.id, assistant_id=ASSISTANT_ID)
 
     # Récupération de la réponse
     messages = client.beta.threads.messages.list(thread_id=thread.id)
