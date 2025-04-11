@@ -30,23 +30,28 @@ if prompt := st.chat_input("Posez-moi votre question sur une procédure AFMA..."
     thread = client.beta.threads.create()
     client.beta.threads.messages.create(thread_id=thread.id, role="user", content=prompt)
 
-    # Lancement de l'assistant avec streaming
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
+    # Lancement de l'assistant
+    run = client.beta.threads.runs.create(thread_id=thread.id, assistant_id=ASSISTANT_ID)
 
-        # Création du run avec streaming
-        stream = client.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=ASSISTANT_ID,
-            stream=True
-        )
+    # Attente jusqu'à la fin du traitement
+    with st.spinner("L’assistant réfléchit à la meilleure procédure..."):
+        while True:
+            run_status = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+            if run_status.status == "completed":
+                break
+            time.sleep(1)
 
-        for chunk in stream:
-            if hasattr(chunk, "delta") and hasattr(chunk.delta, "content"):
-                content = chunk.delta.content
-                full_response += content
-                message_placeholder.markdown(full_response + "▌")
+    # Récupération de la réponse
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
+    assistant_response = None
+    for msg in reversed(messages.data):
+        if msg.role == "assistant":
+            assistant_response = msg.content[0].text.value
+            break
 
-        message_placeholder.markdown(full_response)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+    if assistant_response:
+        with st.chat_message("assistant"):
+            st.markdown(assistant_response)
+        st.session_state.messages.append({"role": "assistant", "content": assistant_response})
+    else:
+        st.warning("❗ Une erreur est survenue, je n’ai pas pu récupérer la réponse.")
